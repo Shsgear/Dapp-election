@@ -27,11 +27,11 @@ contract Election {
     addCandidate("Candidate 2");
   }
 
-    // 每个候选人加入时id为当前的候选人的总数
-    // 并向candidates添加候选人.
-    // 默认的初始投票数为0
+  // 每个候选人加入时id为当前的候选人的总数
+  // 并向candidates添加候选人.
+  // 默认的初始投票数为0
   function addCandidate(string memory _name) private {
-    candidatesCount ++;
+    candidatesCount++;
     candidates[candidatesCount] = Candidate(candidatesCount, _name, 0);
   }
 }
