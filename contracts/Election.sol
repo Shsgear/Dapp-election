@@ -14,6 +14,9 @@ contract Election {
 
   mapping(uint => Candidate) public candidates;
 
+  // store accounts that hasve voted
+  mapping(address => bool) public voters;
+
 
   // Store candidates count.uint Default to 0;
   // 因为不能通过mapping知道所有的数据大小
@@ -33,5 +36,13 @@ contract Election {
   function addCandidate(string memory _name) private {
     candidatesCount++;
     candidates[candidatesCount] = Candidate(candidatesCount, _name, 0);
+  }
+
+  function vote(uint _candidateId) public {
+    // record that voter has voted;
+    
+    voters[msg.sender] = true;
+    // update the vote count
+    candidates[_candidateId].voteCount ++;
   }
 }
