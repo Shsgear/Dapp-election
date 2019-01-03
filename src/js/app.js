@@ -28,11 +28,35 @@ App = {
       App.contracts.Election = TruffleContract(election);
       // Connect provider to interact with contract
       App.contracts.Election.setProvider(App.web3Provider);
+      
+      App.listenOnEvents();
+
       return App.render();
     })
   },
-  
+
+  // 监听合约event
+  listenOnEvents: function() {
+    App.contracts.Election.deployed().then(function(instance) {
+      // subscribe the event
+      // arg1 pass a filter to event 
+      // arg2 the metadata that represernts how many blocks we want to subscribe the event
+      instance.votedEvent({}, {
+        fromBlock: "latest",
+        toBlock: 'latest'
+      }).watch(function(err, event) {
+        if (err) {
+          return console.warn(err);
+        }
+        console.log("event triggered:  ", event);
+        App.render();
+      })
+    })
+  },
+
+
   render: function() {
+    // console.log('render');
     var electionInstance;
     var loader = $("#loader");
     var content = $("#content");
@@ -60,25 +84,60 @@ App = {
       var $candidateResults = $("#candidatesResults");
       $candidateResults.empty();
 
-      var candidatesSelect = $('#candidatesSelect');
-      candidatesSelect.empty();
+      var $candidatesSelect = $('#candidatesSelect');
+      $candidatesSelect.empty();
 
       // console.log(candidatesCount);
+      var promises = [];
       for (let i = 1; i <= candidatesCount; i++) {
-        electionInstance.candidates(i).then(function(candidate) {
+        promises.push(electionInstance.candidates(i));
+        // electionInstance.candidates(i).then(function(candidate) {
+          // var id = candidate[0].toNumber();
+          // var name = candidate[1];
+          // var voteCount = candidate[2].toNumber();
+          // console.log(id, name, voteCount);
+          // // render candidates result;
+          // var candidateTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + voteCount + "</td></tr>"
+          // $candidateResults.append(candidateTemplate);
+
+          // // Render candidate ballot option
+          // var candidateOption = "<option value='" + id + "' >" + name + "</ option>"
+          // candidatesSelect.append(candidateOption);
+        // })
+      }
+      console.log("promises", promises);
+      Promise.all(promises).then(function(candidates) {
+        var $candidateResults = $("#candidatesResults");
+        $candidateResults.empty();
+
+        var $candidatesSelect = $('#candidatesSelect');
+        $candidatesSelect.empty();
+
+        candidates.forEach((candidate) => {
           var id = candidate[0].toNumber();
           var name = candidate[1];
           var voteCount = candidate[2].toNumber();
-          console.log(id, name, voteCount);
+
           // render candidates result;
           var candidateTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + voteCount + "</td></tr>"
           $candidateResults.append(candidateTemplate);
 
           // Render candidate ballot option
           var candidateOption = "<option value='" + id + "' >" + name + "</ option>"
-          candidatesSelect.append(candidateOption);
+          $candidatesSelect.append(candidateOption);
         })
-      }
+        // var id = candidate[0].toNumber();
+        // var name = candidate[1];
+        // var voteCount = candidate[2].toNumber();
+        // console.log(id, name, voteCount);
+        // // render candidates result;
+        // var candidateTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + voteCount + "</td></tr>"
+        // $candidateResults.append(candidateTemplate);
+
+        // // Render candidate ballot option
+        // var candidateOption = "<option value='" + id + "' >" + name + "</ option>"
+        // candidatesSelect.append(candidateOption);
+      })
       return electionInstance.voters(App.account);
     }).then(function(hasVoted) {
       console.log(hasVoted)

@@ -17,6 +17,11 @@ contract Election {
   // store accounts that hasve voted
   mapping(address => bool) public voters;
 
+  //voted event
+  event votedEvent (
+    uint indexed _candidateId
+  );
+
 
   // Store candidates count.uint Default to 0;
   // 因为不能通过mapping知道所有的数据大小
@@ -48,5 +53,8 @@ contract Election {
     voters[msg.sender] = true;
     // update the vote count
     candidates[_candidateId].voteCount ++;
+
+    // trigger vote Event
+    emit votedEvent(_candidateId);
   }
 }
