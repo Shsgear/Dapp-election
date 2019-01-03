@@ -55,10 +55,15 @@ App = {
       return electionInstance.candidatesCount();
     }).then(function(bnCandidatesCount) {
       // result is a BN(Big Number)
-      var $candidateResults = $("#candidatesResults");
       var candidatesCount = bnCandidatesCount.toNumber();
+
+      var $candidateResults = $("#candidatesResults");
       $candidateResults.empty();
-      console.log(candidatesCount);
+
+      var candidatesSelect = $('#candidatesSelect');
+      candidatesSelect.empty();
+
+      // console.log(candidatesCount);
       for (let i = 1; i <= candidatesCount; i++) {
         electionInstance.candidates(i).then(function(candidate) {
           var id = candidate[0].toNumber();
@@ -68,15 +73,39 @@ App = {
           // render candidates result;
           var candidateTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + voteCount + "</td></tr>"
           $candidateResults.append(candidateTemplate);
+
+          // Render candidate ballot option
+          var candidateOption = "<option value='" + id + "' >" + name + "</ option>"
+          candidatesSelect.append(candidateOption);
         })
+      }
+      return electionInstance.voters(App.account);
+    }).then(function(hasVoted) {
+      console.log(hasVoted)
+      if (hasVoted) {
+        $('form').hide();
       }
       loader.hide();
       content.show();
-    }).catch(function(err) {
-      console.warn(err);
-    });
-  }
+    }).catch(function(error) {
+      console.warn(error);
+    })
+  },
 
+  castVote: function() {
+    var candidateId = $('#candidatesSelect').val();
+    console.log(candidateId);
+    App.contracts.Election.deployed().then(function(instance) {
+      return instance.vote(candidateId, {from: App.account});
+    }).then(function(result) {
+      console.log(result);
+      // wait for votes to update
+      $("#content").hide();
+      $("#loader").show();
+    }).catch(function(error) {
+      console.warn(error);
+    })
+  }
 };
 
 $(function() {
